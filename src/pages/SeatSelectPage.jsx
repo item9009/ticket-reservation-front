@@ -1,34 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import useAuthStore from '../store/authStore'
-
-// Mock 좌석 데이터 (event_seats 테이블 기반)
-const MOCK_SEATS = {
-  VIP: [
-    { id: 1, row: 'A', num: '1', price: 150000, status: 'AVAILABLE' },
-    { id: 2, row: 'A', num: '2', price: 150000, status: 'AVAILABLE' },
-    { id: 3, row: 'A', num: '3', price: 150000, status: 'RESERVED' },
-    { id: 4, row: 'B', num: '1', price: 150000, status: 'AVAILABLE' },
-    { id: 5, row: 'B', num: '2', price: 150000, status: 'AVAILABLE' },
-    { id: 6, row: 'B', num: '3', price: 150000, status: 'SOLD' },
-  ],
-  R석: [
-    { id: 4, row: 'C', num: '1', price: 100000, status: 'AVAILABLE' },
-    { id: 5, row: 'C', num: '2', price: 100000, status: 'AVAILABLE' },
-    { id: 6, row: 'C', num: '3', price: 100000, status: 'AVAILABLE' },
-    { id: 7, row: 'D', num: '1', price: 100000, status: 'RESERVED' },
-    { id: 8, row: 'D', num: '2', price: 100000, status: 'AVAILABLE' },
-    { id: 9, row: 'D', num: '3', price: 100000, status: 'AVAILABLE' },
-  ],
-  S석: [
-    { id: 10, row: 'E', num: '1', price: 80000, status: 'AVAILABLE' },
-    { id: 11, row: 'E', num: '2', price: 80000, status: 'AVAILABLE' },
-    { id: 12, row: 'E', num: '3', price: 80000, status: 'AVAILABLE' },
-    { id: 13, row: 'F', num: '1', price: 80000, status: 'AVAILABLE' },
-    { id: 14, row: 'F', num: '2', price: 80000, status: 'SOLD' },
-    { id: 15, row: 'F', num: '3', price: 80000, status: 'AVAILABLE' },
-  ],
-}
+import client from '../api/client'
 
 function SeatButton({ seat, selected, onClick }) {
   const base = 'w-12 h-12 rounded-lg text-xs font-semibold transition flex flex-col items-center justify-center gap-0.5'
@@ -68,6 +41,34 @@ export default function SeatSelectPage() {
   const navigate = useNavigate()
   const { token, userId } = useAuthStore()
   const [selectedSeats, setSelectedSeats] = useState([])
+  const [seatsByGrade, setSeatsByGrade] = useState({})
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    const fetchSeats = async () => {
+      try {
+        const res = await client.get(`/events/${eventId}/seats`)
+        const seats = res.data
+
+        // grade 기준으로 그룹핑
+        const grouped = seats.reduce((acc, seat) => {
+          const grade = seat.grade ?? seat.section ?? '일반'
+          if (!acc[grade]) acc[grade] = []
+          acc[grade].push(seat)
+          return acc
+        }, {})
+
+        setSeatsByGrade(grouped)
+      } catch (err) {
+        setError('좌석 정보를 불러오지 못했습니다.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchSeats()
+  }, [eventId])
 
   const toggleSeat = (seat) => {
     setSelectedSeats((prev) =>
@@ -105,28 +106,38 @@ export default function SeatSelectPage() {
       </div>
 
       {/* 좌석 구역 */}
-      <div className="space-y-8">
-        {Object.entries(MOCK_SEATS).map(([grade, seats]) => (
-          <div key={grade}>
-            <div className="flex items-center gap-3 mb-3">
-              <h2 className="text-white font-semibold">{grade}</h2>
-              <span className="text-slate-400 text-sm">
-                {seats[0]?.price.toLocaleString()}원
-              </span>
+      {loading && (
+        <p className="text-slate-400 text-center py-10">좌석 정보를 불러오는 중...</p>
+      )}
+
+      {error && (
+        <p className="text-red-400 text-center py-10">{error}</p>
+      )}
+
+      {!loading && !error && (
+        <div className="space-y-8">
+          {Object.entries(seatsByGrade).map(([grade, seats]) => (
+            <div key={grade}>
+              <div className="flex items-center gap-3 mb-3">
+                <h2 className="text-white font-semibold">{grade}</h2>
+                <span className="text-slate-400 text-sm">
+                  {seats[0]?.price.toLocaleString()}원
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {seats.map((seat) => (
+                  <SeatButton
+                    key={seat.id}
+                    seat={seat}
+                    selected={!!selectedSeats.find((s) => s.id === seat.id)}
+                    onClick={toggleSeat}
+                  />
+                ))}
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {seats.map((seat) => (
-                <SeatButton
-                  key={seat.id}
-                  seat={seat}
-                  selected={!!selectedSeats.find((s) => s.id === seat.id)}
-                  onClick={toggleSeat}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* 범례 */}
       <div className="flex items-center gap-6 mt-10 text-sm text-slate-400">
