@@ -78,7 +78,7 @@ export default function EventListPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span>📍</span>
-                  <span>{event.venue}</span>
+                  <span>{event.venueName}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span>💰</span>
