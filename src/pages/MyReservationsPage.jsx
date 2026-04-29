@@ -53,7 +53,7 @@ export default function MyReservationsPage() {
           {reservations.map((r) => {
             const s = STATUS_LABEL[r.status] || { label: r.status, color: 'text-slate-400' }
             return (
-              <div key={r.id} className="bg-slate-800 rounded-2xl p-5">
+              <div key={r.id} className="bg-slate-800 rounded-2xl p-5 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition" onClick={() => navigate(`/my-reservations/${r.reservationNo}`)}>
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <p className="text-white font-semibold font-mono text-sm">

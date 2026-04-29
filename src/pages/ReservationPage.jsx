@@ -23,7 +23,7 @@ export default function ReservationPage() {
       const res = await client.post('/reservations', {
         userId,
         eventId,
-        eventSeatIds: selectedSeats.map((s) => s.id),
+        eventSeatIds: selectedSeats.map((s) => s.eventSeatId),
       })
       navigate('/reservation-complete', { state: { reservation: res.data } })
     } catch (err) {
@@ -49,9 +49,9 @@ export default function ReservationPage() {
           선택한 좌석
         </h2>
         {selectedSeats.map((seat) => (
-          <div key={seat.id} className="flex justify-between text-sm">
+          <div key={seat.eventSeatId} className="flex justify-between text-sm">
             <span className="text-slate-300">
-              {seat.row}열 {seat.num}번
+              {seat.grade}석 {seat.seatIndex + 1}번
             </span>
             <span className="text-white font-medium">
               {seat.price.toLocaleString()}원

@@ -3,35 +3,35 @@ import { useParams, useNavigate } from 'react-router-dom'
 import useAuthStore from '../store/authStore'
 import client from '../api/client'
 
-function SeatButton({ seat, selected, onClick }) {
+function SeatButton({ seat, seatIndex, selected, onClick }) {
   const base = 'w-12 h-12 rounded-lg text-xs font-semibold transition flex flex-col items-center justify-center gap-0.5'
+  const label = `${seatIndex + 1}번`
 
   if (seat.status === 'SOLD') {
     return (
-      <div className={`${base} bg-slate-700 text-slate-500 cursor-not-allowed`}>
-        <span>{seat.row}{seat.num}</span>
-        <span>판매</span>
+      <div className={`${base} bg-red-900 text-red-400 cursor-not-allowed relative`}>
+        <span className="text-lg font-bold">✕</span>
       </div>
     )
   }
   if (seat.status === 'RESERVED') {
     return (
       <div className={`${base} bg-yellow-900 text-yellow-600 cursor-not-allowed`}>
-        <span>{seat.row}{seat.num}</span>
+        <span>{label}</span>
         <span>선점</span>
       </div>
     )
   }
   return (
     <button
-      onClick={() => onClick(seat)}
+      onClick={() => onClick({ ...seat, seatIndex })}
       className={`${base} ${
         selected
           ? 'bg-indigo-600 text-white ring-2 ring-indigo-300'
           : 'bg-slate-600 hover:bg-indigo-700 text-white'
       }`}
     >
-      <span>{seat.row}{seat.num}</span>
+      <span>{label}</span>
     </button>
   )
 }
@@ -72,8 +72,8 @@ export default function SeatSelectPage() {
 
   const toggleSeat = (seat) => {
     setSelectedSeats((prev) =>
-      prev.find((s) => s.id === seat.id)
-        ? prev.filter((s) => s.id !== seat.id)
+      prev.find((s) => s.eventSeatId === seat.eventSeatId)
+        ? prev.filter((s) => s.eventSeatId !== seat.eventSeatId)
         : [...prev, seat]
     )
   }
@@ -125,11 +125,12 @@ export default function SeatSelectPage() {
                 </span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {seats.map((seat) => (
+                {seats.map((seat, index) => (
                   <SeatButton
-                    key={seat.id}
+                    key={seat.eventSeatId}
                     seat={seat}
-                    selected={!!selectedSeats.find((s) => s.id === seat.id)}
+                    seatIndex={index}
+                    selected={!!selectedSeats.find((s) => s.eventSeatId === seat.eventSeatId)}
                     onClick={toggleSeat}
                   />
                 ))}
@@ -151,7 +152,7 @@ export default function SeatSelectPage() {
           <div className="w-4 h-4 rounded bg-yellow-900" /> 선점 중
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-slate-700" /> 판매 완료
+          <div className="w-4 h-4 rounded bg-red-900 flex items-center justify-center text-red-400 text-xs font-bold">✕</div> 판매 완료
         </div>
       </div>
 
@@ -161,7 +162,7 @@ export default function SeatSelectPage() {
           <div className="max-w-4xl mx-auto flex items-center justify-between">
             <div>
               <p className="text-slate-400 text-sm">
-                선택한 좌석: {selectedSeats.map((s) => `${s.row}${s.num}`).join(', ')}
+                선택한 좌석: {selectedSeats.map((s) => `${s.grade}석 ${s.seatIndex + 1}번`).join(', ')}
               </p>
               <p className="text-white font-bold text-lg">
                 총 {totalAmount.toLocaleString()}원

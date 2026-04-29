@@ -6,6 +6,7 @@ import SeatSelectPage from './pages/SeatSelectPage'
 import ReservationPage from './pages/ReservationPage'
 import ReservationCompletePage from './pages/ReservationCompletePage'
 import MyReservationsPage from './pages/MyReservationsPage'
+import ReservationDetailPage from './pages/ReservationDetailPage'
 import useAuthStore from './store/authStore'
 
 function PrivateRoute({ children }) {
@@ -54,6 +55,14 @@ export default function App() {
                   element={
                     <PrivateRoute>
                       <MyReservationsPage />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/my-reservations/:reservationNo"
+                  element={
+                    <PrivateRoute>
+                      <ReservationDetailPage />
                     </PrivateRoute>
                   }
                 />
